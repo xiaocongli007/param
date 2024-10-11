@@ -3,19 +3,19 @@ package com.pj.dto;
 import java.time.LocalDate;
 
 public class PurchaseRequestDTO {
-    private String productType;
+    private String productCode; // 从 productType 更名为 productCode
     private LocalDate purchaseDate;
     private String customerType;
     private Double purchaseAmount;
 
     // Getters and Setters
 
-    public String getProductType() {
-        return productType;
+    public String getProductCode() {
+        return productCode;
     }
 
-    public void setProductType(String productType) {
-        this.productType = productType;
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
     }
 
     public LocalDate getPurchaseDate() {

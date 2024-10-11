@@ -99,3 +99,109 @@ SET @customer_type_private = (SELECT id FROM `customer_types` WHERE `type_name` 
 INSERT INTO `product_sale_rules` (`product_id`, `customer_type_id`, `purchase_limit`, `allowed_on_weekends`) VALUES
                                                                                                                  (@product_id, @customer_type_public, 500000.00, FALSE),
                                                                                                                  (@product_id, @customer_type_private, 50000.00, TRUE);
+
+
+--新增节假日策略表
+CREATE TABLE `strategy_types` (
+                                  `id` BIGINT NOT NULL AUTO_INCREMENT,
+                                  `strategy_code` VARCHAR(255) NOT NULL UNIQUE,
+                                  `regular_holidays` VARCHAR(255) DEFAULT NULL,
+                                  `special_holidays` VARCHAR(255) DEFAULT NULL,
+                                  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `strategy_types` (`strategy_code`, `regular_holidays`, `special_holidays`) VALUES
+                                                                                           ('策略1', '6|7', NULL),
+                                                                                           ('策略2', NULL, NULL);
+
+ALTER TABLE `product_sale_rules`
+    ADD COLUMN `strategy_type_id` BIGINT NULL;
+
+-- 获取策略类型ID
+SET @strategy1_id = (SELECT id FROM `strategy_types` WHERE `strategy_code` = '策略1');
+SET @strategy2_id = (SELECT id FROM `strategy_types` WHERE `strategy_code` = '策略2');
+
+-- 更新 product_sale_rules 表中的 strategy_type_id
+UPDATE `product_sale_rules`
+SET `strategy_type_id` =
+        CASE
+            WHEN `customer_type_id` = (SELECT id FROM `customer_types` WHERE `type_name` = '对公客户') THEN @strategy1_id
+            WHEN `customer_type_id` = (SELECT id FROM `customer_types` WHERE `type_name` = '对私客户') THEN @strategy2_id
+            END
+WHERE `product_id` = (SELECT id FROM `products` WHERE `product_type` = '特殊国债');
+
+
+-- 3d. 将 strategy_type_id 列设为 NOT NULL
+ALTER TABLE `product_sale_rules`
+    MODIFY COLUMN `strategy_type_id` BIGINT NOT NULL;
+
+-- 3e. 添加外键约束
+ALTER TABLE `product_sale_rules`
+    ADD CONSTRAINT `fk_strategy_type`
+        FOREIGN KEY (`strategy_type_id`) REFERENCES `strategy_types`(`id`) ON DELETE CASCADE;
+
+
+--新增product状态字段
+ALTER TABLE `products`
+    ADD COLUMN `status` VARCHAR(50) NOT NULL DEFAULT 'unpublished' AFTER `total_issued`;
+
+UPDATE `products`
+SET `status` = 'published'
+WHERE `product_type` IN ('特殊国债', '普通国债');
+
+ALTER TABLE `products`
+    ADD COLUMN `product_code` VARCHAR(255) NULL AFTER `id`;
+
+UPDATE `products` SET `product_code` = UUID() WHERE `product_code` IS NULL;
+
+ALTER TABLE `products`
+    CHANGE COLUMN `product_type` `product_name` VARCHAR(255) NOT NULL;
+
+ALTER TABLE `products`
+    MODIFY COLUMN `product_code` VARCHAR(255) NOT NULL,
+    ADD UNIQUE KEY `uk_product_code` (`product_code`),
+    ADD UNIQUE KEY `uk_product_name` (`product_name`);
+
+ALTER TABLE `product_sale_rules`
+    ADD COLUMN `product_code` VARCHAR(255) NULL AFTER `id`;
+
+
+
+
+-- 1. 插入产品
+INSERT INTO `products` (`product_code`, `product_name`, `sale_start_date`, `sale_end_date`, `total_issued`, `status`) VALUES
+                                                                                                                          ('SB20241101', '特殊国债2', '2024-11-01', '2024-11-03', 10000000.00, 'published'),
+                                                                                                                          ('NB20550101', '普通国债2', '2055-01-01', '2055-12-31', 50000000.00, 'published');
+
+-- 2. 插入客户类型
+INSERT INTO `customer_types` (`type_name`) VALUES
+                                               ('对公客户'),
+                                               ('对私客户');
+
+-- 3. 插入策略类型
+INSERT INTO `strategy_types` (`strategy_code`, `regular_holidays`, `special_holidays`) VALUES
+                                                                                           ('策略1', '6|7', NULL),
+                                                                                           ('策略2', NULL, NULL);
+
+-- 4. 获取产品、客户类型和策略类型ID
+SET @product_code_special = 'SB20241101';
+SET @customer_type_public = (SELECT id FROM `customer_types` WHERE `type_name` = '对公客户');
+SET @customer_type_private = (SELECT id FROM `customer_types` WHERE `type_name` = '对私客户');
+SET @strategy1_id = (SELECT id FROM `strategy_types` WHERE `strategy_code` = '策略1');
+SET @strategy2_id = (SELECT id FROM `strategy_types` WHERE `strategy_code` = '策略2');
+
+-- 5. 插入产品发售规则
+INSERT INTO `product_sale_rules` (`product_code`, `customer_type_id`, `purchase_limit`, `strategy_type_id`) VALUES
+                                                                                                                (@product_code_special, @customer_type_public, 500000.00, @strategy1_id),
+                                                                                                                (@product_code_special, @customer_type_private, 50000.00, @strategy2_id);
+
+SET @product_code_special = 'NC20241101';
+SET @customer_type_public = (SELECT id FROM `customer_types` WHERE `type_name` = '对公客户');
+SET @customer_type_private = (SELECT id FROM `customer_types` WHERE `type_name` = '对私客户');
+SET @strategy1_id = (SELECT id FROM `strategy_types` WHERE `strategy_code` = '策略1');
+SET @strategy2_id = (SELECT id FROM `strategy_types` WHERE `strategy_code` = '策略2');
+
+-- 5. 插入产品发售规则
+INSERT INTO `product_sale_rules` (`product_code`, `customer_type_id`, `purchase_limit`, `strategy_type_id`) VALUES
+                                                                                                                (@product_code_special, @customer_type_public, 500000.00, @strategy1_id),
+                                                                                                                (@product_code_special, @customer_type_private, 50000.00, @strategy2_id);

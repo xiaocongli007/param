@@ -1,10 +1,14 @@
 package com.pj.model;
+
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "parameters")
-public class Parameter {
+public class Parameter implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +29,7 @@ public class Parameter {
     @Column(name = "enabled", nullable = false)
     private Boolean enabled = true;
 
-    // 构造方法
+    // Constructors
     public Parameter() {}
 
     public Parameter(String key, String value, LocalDateTime startTime, LocalDateTime endTime, Boolean enabled) {
@@ -36,13 +40,11 @@ public class Parameter {
         this.enabled = enabled;
     }
 
-    // Getters 和 Setters
+    // Getters and Setters
 
     public Long getId() {
         return id;
     }
-
-    // ID 无 Setter，因为它是自动生成的
 
     public String getKey() {
         return key;

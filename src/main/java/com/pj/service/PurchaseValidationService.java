@@ -5,15 +5,17 @@ import com.pj.dto.PurchaseResponseDTO;
 import com.pj.model.CustomerType;
 import com.pj.model.Product;
 import com.pj.model.ProductSaleRule;
+import com.pj.model.StrategyType;
 import com.pj.repository.CustomerTypeRepository;
 import com.pj.repository.ProductRepository;
 import com.pj.repository.ProductSaleRuleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class PurchaseValidationService {
@@ -28,12 +30,17 @@ public class PurchaseValidationService {
     private ProductSaleRuleRepository productSaleRuleRepository;
 
     public PurchaseResponseDTO validatePurchase(PurchaseRequestDTO request) {
-        // 1. 验证产品是否存在
-        Optional<Product> optionalProduct = productRepository.findByProductType(request.getProductType());
+        // 1. 验证产品是否存在，通过 productCode
+        Optional<Product> optionalProduct = productRepository.findByProductCode(request.getProductCode());
         if (!optionalProduct.isPresent()) {
             return new PurchaseResponseDTO(false, "产品不存在");
         }
         Product product = optionalProduct.get();
+
+        // 验证产品是否已发布
+        if (!"published".equalsIgnoreCase(product.getStatus())) {
+            return new PurchaseResponseDTO(false, "产品未发布");
+        }
 
         // 2. 验证购买日期是否在发售日期范围内
         LocalDate purchaseDate = request.getPurchaseDate();
@@ -48,18 +55,22 @@ public class PurchaseValidationService {
         }
         CustomerType customerType = optionalCustomerType.get();
 
-        // 4. 获取对应的发售规则
-        Optional<ProductSaleRule> optionalRule = productSaleRuleRepository.findByProductAndCustomerType(product, customerType);
+        // 4. 获取对应的发售规则，通过 productCode 和 customerTypeId
+        Optional<ProductSaleRule> optionalRule = productSaleRuleRepository.findByProduct_ProductCodeAndCustomerType(product.getProductCode(), customerType);
         if (!optionalRule.isPresent()) {
             return new PurchaseResponseDTO(false, "未配置发售规则");
         }
         ProductSaleRule rule = optionalRule.get();
+        StrategyType strategy = rule.getStrategyType();
 
         // 5. 验证是否允许在购买日期购买
-        DayOfWeek dayOfWeek = purchaseDate.getDayOfWeek();
-        boolean isWeekend = (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
-        if (isWeekend && !rule.getAllowedOnWeekends()) {
-            return new PurchaseResponseDTO(false, "节假日不可购买");
+        if (!isAllowedToPurchase(purchaseDate, strategy)) {
+            // 根据策略类型决定提示信息
+            if (strategy.getRegularHolidays() != null && !strategy.getRegularHolidays().isEmpty()) {
+                return new PurchaseResponseDTO(false, "节假日不可购买");
+            } else {
+                return new PurchaseResponseDTO(false, "不可购买，非节假日");
+            }
         }
 
         // 6. 验证购买金额是否在限额内
@@ -69,5 +80,49 @@ public class PurchaseValidationService {
 
         // 7. 如果所有验证通过，允许购买
         return new PurchaseResponseDTO(true, "可以购买");
+    }
+
+    /**
+     * 判断是否允许在指定日期购买
+     *
+     * @param date     购买日期
+     * @param strategy 策略类型
+     * @return 如果允许购买返回 true，否则返回 false
+     */
+    private boolean isAllowedToPurchase(LocalDate date, StrategyType strategy) {
+        boolean isHoliday = false;
+
+        // 处理常规节假日
+        if (strategy.getRegularHolidays() != null && !strategy.getRegularHolidays().isEmpty()) {
+            String[] regulars = strategy.getRegularHolidays().split("\\|");
+            Set<Integer> regularSet = new HashSet<>();
+            for (String s : regulars) {
+                try {
+                    regularSet.add(Integer.parseInt(s));
+                } catch (NumberFormatException e) {
+                    // 忽略无效的数字
+                }
+            }
+            isHoliday = regularSet.contains(date.getDayOfWeek().getValue());
+        }
+
+        // 处理特殊节假日
+        if (!isHoliday && strategy.getSpecialHolidays() != null && !strategy.getSpecialHolidays().isEmpty()) {
+            String[] specials = strategy.getSpecialHolidays().split("\\|");
+            String dateStr = date.format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+            for (String special : specials) {
+                if (special.equals(dateStr)) {
+                    isHoliday = true;
+                    break;
+                }
+            }
+        }
+
+        // 根据节假日情况决定是否允许购买
+        if (isHoliday) {
+            return false; // 节假日不可购买
+        } else {
+            return true; // 非节假日可以购买
+        }
     }
 }

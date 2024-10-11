@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface ProductSaleRuleRepository extends JpaRepository<ProductSaleRule, Long> {
     Optional<ProductSaleRule> findByProductAndCustomerType(Product product, CustomerType customerType);
+    Optional<ProductSaleRule> findByProduct_ProductCodeAndCustomerType(String productCode, CustomerType customerType);
+
 }

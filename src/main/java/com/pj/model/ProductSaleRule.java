@@ -1,37 +1,42 @@
 package com.pj.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
-@Table(name = "product_sale_rules", uniqueConstraints = @UniqueConstraint(columnNames = {"product_id", "customer_type_id"}))
-public class ProductSaleRule {
+@Table(name = "product_sale_rules", uniqueConstraints = @UniqueConstraint(columnNames = {"product_code", "customer_type_id"}))
+public class ProductSaleRule implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional=false)
-    @JoinColumn(name="product_id", referencedColumnName = "id")
+    // 使用 product_code 关联 Product
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "product_code", referencedColumnName = "product_code")
     private Product product;
 
-    @ManyToOne(optional=false)
-    @JoinColumn(name="customer_type_id", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "customer_type_id", referencedColumnName = "id")
     private CustomerType customerType;
 
-    @Column(name="purchase_limit", nullable=false)
+    @Column(name = "purchase_limit", nullable = false)
     private Double purchaseLimit;
 
-    @Column(name="allowed_on_weekends", nullable=false)
-    private Boolean allowedOnWeekends;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "strategy_type_id", referencedColumnName = "id")
+    private StrategyType strategyType;
 
     // Constructors
     public ProductSaleRule() {}
 
-    public ProductSaleRule(Product product, CustomerType customerType, Double purchaseLimit, Boolean allowedOnWeekends) {
+    public ProductSaleRule(Product product, CustomerType customerType, Double purchaseLimit, StrategyType strategyType) {
         this.product = product;
         this.customerType = customerType;
         this.purchaseLimit = purchaseLimit;
-        this.allowedOnWeekends = allowedOnWeekends;
+        this.strategyType = strategyType;
     }
 
     // Getters and Setters
@@ -39,8 +44,6 @@ public class ProductSaleRule {
     public Long getId() {
         return id;
     }
-
-    // No Setter for ID as it's auto-generated
 
     public Product getProduct() {
         return product;
@@ -66,11 +69,11 @@ public class ProductSaleRule {
         this.purchaseLimit = purchaseLimit;
     }
 
-    public Boolean getAllowedOnWeekends() {
-        return allowedOnWeekends;
+    public StrategyType getStrategyType() {
+        return strategyType;
     }
 
-    public void setAllowedOnWeekends(Boolean allowedOnWeekends) {
-        this.allowedOnWeekends = allowedOnWeekends;
+    public void setStrategyType(StrategyType strategyType) {
+        this.strategyType = strategyType;
     }
 }

@@ -1,10 +1,13 @@
 package com.pj.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "customer_types")
-public class CustomerType {
+public class CustomerType implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,8 +28,6 @@ public class CustomerType {
     public Long getId() {
         return id;
     }
-
-    // No Setter for ID as it's auto-generated
 
     public String getTypeName() {
         return typeName;
