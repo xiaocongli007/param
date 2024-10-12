@@ -2,6 +2,7 @@ package com.pj.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "strategy_types")
@@ -24,6 +25,13 @@ public class StrategyType implements Serializable {
 
     @Column(name="special_workdays")
     private String specialWorkdays; // 新增字段，格式同 regular_holidays
+
+    @Column(name="start_time")
+    private LocalDate startTime; // 策略开始日期
+
+    @Column(name="end_time")
+    private LocalDate endTime; // 策略结束日期
+
 
     // Constructors
     public StrategyType() {}
@@ -72,4 +80,25 @@ public class StrategyType implements Serializable {
     public void setSpecialWorkdays(String specialWorkdays) {
         this.specialWorkdays = specialWorkdays;
     }
+
+    public LocalDate getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDate startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDate getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDate endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
 }

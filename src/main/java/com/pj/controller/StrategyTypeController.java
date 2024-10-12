@@ -24,10 +24,17 @@ public class StrategyTypeController {
      * @return 新增的策略类型
      */
     @PostMapping("/add")
-    public ResponseEntity<StrategyTypeDTO> addStrategyType(@RequestBody StrategyTypeDTO strategyTypeDTO) {
+    public ResponseEntity<?> addStrategyType(@RequestBody StrategyTypeDTO strategyTypeDTO) {
         // 检查是否已存在相同的策略代码
         if (strategyTypeRepository.findByStrategyCode(strategyTypeDTO.getStrategyCode()).isPresent()) {
-            return ResponseEntity.badRequest().body(null); // 或返回自定义错误信息
+            return ResponseEntity.badRequest().body("Strategy code already exists");
+        }
+
+        // 检查 startTime 和 endTime 的逻辑
+        if (strategyTypeDTO.getStartTime() != null && strategyTypeDTO.getEndTime() != null) {
+            if (strategyTypeDTO.getStartTime().isAfter(strategyTypeDTO.getEndTime())) {
+                return ResponseEntity.badRequest().body("Start time cannot be after end time");
+            }
         }
 
         StrategyType strategyType = new StrategyType();
@@ -35,6 +42,9 @@ public class StrategyTypeController {
         strategyType.setRegularHolidays(strategyTypeDTO.getRegularHolidays());
         strategyType.setSpecialHolidays(strategyTypeDTO.getSpecialHolidays());
         strategyType.setSpecialWorkdays(strategyTypeDTO.getSpecialWorkdays());
+        strategyType.setStartTime(strategyTypeDTO.getStartTime());
+        strategyType.setEndTime(strategyTypeDTO.getEndTime());
+
         StrategyType savedStrategyType = strategyTypeRepository.save(strategyType);
 
         StrategyTypeDTO responseDTO = new StrategyTypeDTO(
@@ -42,7 +52,9 @@ public class StrategyTypeController {
                 savedStrategyType.getStrategyCode(),
                 savedStrategyType.getRegularHolidays(),
                 savedStrategyType.getSpecialHolidays(),
-                savedStrategyType.getSpecialWorkdays()
+                savedStrategyType.getSpecialWorkdays(),
+                savedStrategyType.getStartTime(),
+                savedStrategyType.getEndTime()
         );
         return ResponseEntity.ok(responseDTO);
     }
@@ -61,7 +73,9 @@ public class StrategyTypeController {
                         st.getStrategyCode(),
                         st.getRegularHolidays(),
                         st.getSpecialHolidays(),
-                        st.getSpecialWorkdays()))
+                        st.getSpecialWorkdays(),
+                        st.getStartTime(),
+                        st.getEndTime()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseDTOs);
     }

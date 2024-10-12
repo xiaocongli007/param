@@ -12,5 +12,6 @@ public enum ResponseCode {
     STRATEGY_NOT_FOUND,//策略类型不存在
     HOLIDAY_NOT_ALLOWED,//节假日不可购买
     PURCHASE_LIMIT_EXCEEDED,//购买金额超限
-    CAN_PURCHASE//可以购买
+    CAN_PURCHASE,//可以购买
+    STRATEGY_EXPIRED//策略已过期
 }

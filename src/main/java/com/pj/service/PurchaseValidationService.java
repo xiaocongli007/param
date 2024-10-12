@@ -84,19 +84,27 @@ public class PurchaseValidationService {
         }
         StrategyType strategy = optionalStrategy.get();
 
-        // 6. 验证是否允许在购买日期购买
+        // 6. 校验策略是否有效
+        if (strategy.getStartTime() == null || strategy.getEndTime() == null ||
+                purchaseDate.isBefore(strategy.getStartTime()) ||
+                purchaseDate.isAfter(strategy.getEndTime())) {
+            String message = responseMessageService.getMessage(ResponseCode.STRATEGY_EXPIRED);
+            return new PurchaseResponseDTO(false, message, ResponseCode.STRATEGY_EXPIRED.name());
+        }
+
+        // 7. 验证是否允许在购买日期购买
         if (!isAllowedToPurchase(purchaseDate, strategy)) {
             String message = responseMessageService.getMessage(ResponseCode.HOLIDAY_NOT_ALLOWED);
             return new PurchaseResponseDTO(false, message, ResponseCode.HOLIDAY_NOT_ALLOWED.name());
         }
 
-        // 7. 验证购买金额是否在限额内
+        // 8. 验证购买金额是否在限额内
         if (request.getPurchaseAmount() > rule.getPurchaseLimit()) {
             String message = responseMessageService.getMessage(ResponseCode.PURCHASE_LIMIT_EXCEEDED);
             return new PurchaseResponseDTO(false, message, ResponseCode.PURCHASE_LIMIT_EXCEEDED.name());
         }
 
-        // 8. 如果所有验证通过，允许购买
+        // 9. 如果所有验证通过，允许购买
         String successMessage = responseMessageService.getMessage(ResponseCode.CAN_PURCHASE);
         return new PurchaseResponseDTO(true, successMessage, ResponseCode.CAN_PURCHASE.name());
     }
