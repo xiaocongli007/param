@@ -2,6 +2,7 @@ package com.pj.service;
 
 import com.pj.dto.PurchaseRequestDTO;
 import com.pj.dto.PurchaseResponseDTO;
+import com.pj.enums.ResponseCode;
 import com.pj.model.CustomerType;
 import com.pj.model.Product;
 import com.pj.model.ProductSaleRule;
@@ -33,29 +34,36 @@ public class PurchaseValidationService {
     @Autowired
     private StrategyTypeRepository strategyTypeRepository; // 添加此行
 
+    @Autowired
+    private ResponseMessageService responseMessageService;
+
     public PurchaseResponseDTO validatePurchase(PurchaseRequestDTO request) {
         // 1. 验证产品是否存在，通过 productCode
         Optional<Product> optionalProduct = productRepository.findByProductCode(request.getProductCode());
         if (!optionalProduct.isPresent()) {
-            return new PurchaseResponseDTO(false, "产品不存在");
+            String message = responseMessageService.getMessage(ResponseCode.PRODUCT_NOT_FOUND);
+            return new PurchaseResponseDTO(false, message, ResponseCode.PRODUCT_NOT_FOUND.name());
         }
         Product product = optionalProduct.get();
 
         // 验证产品是否已发布
         if (!"published".equalsIgnoreCase(product.getStatus())) {
-            return new PurchaseResponseDTO(false, "产品未发布");
+            String message = responseMessageService.getMessage(ResponseCode.PRODUCT_NOT_PUBLISHED);
+            return new PurchaseResponseDTO(false, message, ResponseCode.PRODUCT_NOT_PUBLISHED.name());
         }
 
         // 2. 验证购买日期是否在发售日期范围内
         LocalDate purchaseDate = request.getPurchaseDate();
         if (purchaseDate.isBefore(product.getSaleStartDate()) || purchaseDate.isAfter(product.getSaleEndDate())) {
-            return new PurchaseResponseDTO(false, "非发售日期");
+            String message = responseMessageService.getMessage(ResponseCode.NOT_SALE_DATE);
+            return new PurchaseResponseDTO(false, message, ResponseCode.NOT_SALE_DATE.name());
         }
 
         // 3. 验证客户类型是否存在
         Optional<CustomerType> optionalCustomerType = customerTypeRepository.findByTypeName(request.getCustomerType());
         if (!optionalCustomerType.isPresent()) {
-            return new PurchaseResponseDTO(false, "客户类型不存在");
+            String message = responseMessageService.getMessage(ResponseCode.CUSTOMER_TYPE_NOT_FOUND);
+            return new PurchaseResponseDTO(false, message, ResponseCode.CUSTOMER_TYPE_NOT_FOUND.name());
         }
         CustomerType customerType = optionalCustomerType.get();
 
@@ -63,34 +71,34 @@ public class PurchaseValidationService {
         Optional<ProductSaleRule> optionalRule = productSaleRuleRepository.findByProductCodeAndCustomerTypeId(
                 product.getProductCode(), customerType.getId());
         if (!optionalRule.isPresent()) {
-            return new PurchaseResponseDTO(false, "未配置发售规则");
+            String message = responseMessageService.getMessage(ResponseCode.NO_SALE_RULE);
+            return new PurchaseResponseDTO(false, message, ResponseCode.NO_SALE_RULE.name());
         }
         ProductSaleRule rule = optionalRule.get();
 
         // 5. 根据 strategyTypeId 查询 StrategyType
         Optional<StrategyType> optionalStrategy = strategyTypeRepository.findById(rule.getStrategyTypeId());
         if (!optionalStrategy.isPresent()) {
-            return new PurchaseResponseDTO(false, "策略类型不存在");
+            String message = responseMessageService.getMessage(ResponseCode.STRATEGY_NOT_FOUND);
+            return new PurchaseResponseDTO(false, message, ResponseCode.STRATEGY_NOT_FOUND.name());
         }
         StrategyType strategy = optionalStrategy.get();
 
         // 6. 验证是否允许在购买日期购买
         if (!isAllowedToPurchase(purchaseDate, strategy)) {
-            // 根据策略类型决定提示信息
-            if (strategy.getRegularHolidays() != null && !strategy.getRegularHolidays().isEmpty()) {
-                return new PurchaseResponseDTO(false, "节假日不可购买");
-            } else {
-                return new PurchaseResponseDTO(false, "不可购买，非节假日");
-            }
+            String message = responseMessageService.getMessage(ResponseCode.HOLIDAY_NOT_ALLOWED);
+            return new PurchaseResponseDTO(false, message, ResponseCode.HOLIDAY_NOT_ALLOWED.name());
         }
 
         // 7. 验证购买金额是否在限额内
         if (request.getPurchaseAmount() > rule.getPurchaseLimit()) {
-            return new PurchaseResponseDTO(false, "购买金额超限");
+            String message = responseMessageService.getMessage(ResponseCode.PURCHASE_LIMIT_EXCEEDED);
+            return new PurchaseResponseDTO(false, message, ResponseCode.PURCHASE_LIMIT_EXCEEDED.name());
         }
 
         // 8. 如果所有验证通过，允许购买
-        return new PurchaseResponseDTO(true, "可以购买");
+        String successMessage = responseMessageService.getMessage(ResponseCode.CAN_PURCHASE);
+        return new PurchaseResponseDTO(true, successMessage, ResponseCode.CAN_PURCHASE.name());
     }
 
     /**
