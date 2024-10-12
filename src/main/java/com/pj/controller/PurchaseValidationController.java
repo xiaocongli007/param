@@ -29,7 +29,7 @@ public class PurchaseValidationController {
         if (response.isAllowed()) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok().body(response);
         }
     }
 }

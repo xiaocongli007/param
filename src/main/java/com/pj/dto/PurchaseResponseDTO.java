@@ -6,7 +6,7 @@ package com.pj.dto;
 public class PurchaseResponseDTO {
     private boolean allowed;
     private String message;
-    private String code; // 提示码
+    private String msgcode; // 提示码
 
     // Constructors
     public PurchaseResponseDTO() {}
@@ -14,8 +14,10 @@ public class PurchaseResponseDTO {
     public PurchaseResponseDTO(boolean allowed, String message, String code) {
         this.allowed = allowed;
         this.message = message;
-        this.code = code;
+        this.msgcode = code;
     }
+
+    // Getters and Setters
 
     // Getters and Setters
 
@@ -35,11 +37,11 @@ public class PurchaseResponseDTO {
         this.message = message;
     }
 
-    public String getCode(){
-        return code;
+    public String getMsgcode(){
+        return msgcode;
     }
 
-    public void setCode(String code){
-        this.code = code;
+    public void setMsgcode(String msgcode){
+        this.msgcode = msgcode;
     }
 }

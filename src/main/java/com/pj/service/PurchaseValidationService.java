@@ -137,6 +137,20 @@ public class PurchaseValidationService {
             }
         }
 
+
+        // 3. 处理特殊工作日，覆盖常规节假日
+        if (strategy.getSpecialWorkdays() != null && !strategy.getSpecialWorkdays().isEmpty()) {
+            String[] specials = strategy.getSpecialWorkdays().split("\\|");
+            String dateStr = date.format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+            for (String special : specials) {
+                if (special.equals(dateStr)) {
+                    isHoliday = false;
+                    break;
+                }
+            }
+        }
+
+
         // 根据节假日情况决定是否允许购买
         if (isHoliday) {
             return false; // 节假日不可购买

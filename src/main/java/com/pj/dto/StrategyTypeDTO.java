@@ -1,37 +1,31 @@
-package com.pj.model;
+package com.pj.dto;
 
-import javax.persistence.*;
-import java.io.Serializable;
-
-@Entity
-@Table(name = "strategy_types")
-public class StrategyType implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+/**
+ * 策略类型 DTO
+ */
+public class StrategyTypeDTO {
     private Long id;
-
-    @Column(name="strategy_code", unique=true, nullable=false)
     private String strategyCode;
-
-    @Column(name="regular_holidays")
-    private String regularHolidays;
-
-    @Column(name="special_holidays")
-    private String specialHolidays;
-
-    @Column(name="special_workdays")
-    private String specialWorkdays; // 新增字段，格式同 regular_holidays
+    private String regularHolidays; // 格式："6|7"
+    private String specialHolidays; // 格式："20240101|20240102"
+    private String specialWorkdays; // 格式："1|3|5"
 
     // Constructors
-    public StrategyType() {}
+    public StrategyTypeDTO() {}
 
-    public StrategyType(String strategyCode, String regularHolidays, String specialHolidays) {
+    public StrategyTypeDTO(Long id, String strategyCode, String regularHolidays, String specialHolidays, String specialWorkdays) {
+        this.id = id;
         this.strategyCode = strategyCode;
         this.regularHolidays = regularHolidays;
         this.specialHolidays = specialHolidays;
+        this.specialWorkdays = specialWorkdays;
+    }
+
+    public StrategyTypeDTO(String strategyCode, String regularHolidays, String specialHolidays, String specialWorkdays) {
+        this.strategyCode = strategyCode;
+        this.regularHolidays = regularHolidays;
+        this.specialHolidays = specialHolidays;
+        this.specialWorkdays = specialWorkdays;
     }
 
     // Getters and Setters
@@ -64,12 +58,15 @@ public class StrategyType implements Serializable {
         this.specialHolidays = specialHolidays;
     }
 
-
     public String getSpecialWorkdays() {
         return specialWorkdays;
     }
 
     public void setSpecialWorkdays(String specialWorkdays) {
         this.specialWorkdays = specialWorkdays;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }
