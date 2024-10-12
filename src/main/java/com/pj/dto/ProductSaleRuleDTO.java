@@ -1,9 +1,19 @@
 package com.pj.dto;
 
-public class ProductSaleRuleRequest {
+import org.jetbrains.annotations.NotNull;
+
+
+
+public class ProductSaleRuleDTO {
+
+
     private String productCode;
+
     private Long customerTypeId;
+
+
     private Double purchaseLimit;
+
     private Long strategyTypeId;
 
     // Getters and Setters

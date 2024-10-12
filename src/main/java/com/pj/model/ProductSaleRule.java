@@ -4,39 +4,34 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "product_sale_rules", uniqueConstraints = @UniqueConstraint(columnNames = {"product_code", "customer_type_id"}))
+@Table(name = "product_sale_rules")
 public class ProductSaleRule implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 使用 product_code 关联 Product
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "product_code", referencedColumnName = "product_code")
-    private Product product;
+    @Column(name = "product_code", nullable = false)
+    private String productCode;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "customer_type_id", referencedColumnName = "id")
-    private CustomerType customerType;
+    @Column(name = "customer_type_id", nullable = false)
+    private Long customerTypeId;
 
     @Column(name = "purchase_limit", nullable = false)
     private Double purchaseLimit;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "strategy_type_id", referencedColumnName = "id")
-    private StrategyType strategyType;
+    @Column(name = "strategy_type_id", nullable = false)
+    private Long strategyTypeId;
 
     // Constructors
     public ProductSaleRule() {}
 
-    public ProductSaleRule(Product product, CustomerType customerType, Double purchaseLimit, StrategyType strategyType) {
-        this.product = product;
-        this.customerType = customerType;
+    public ProductSaleRule(String productCode, Long customerTypeId, Double purchaseLimit, Long strategyTypeId) {
+        this.productCode = productCode;
+        this.customerTypeId = customerTypeId;
         this.purchaseLimit = purchaseLimit;
-        this.strategyType = strategyType;
+        this.strategyTypeId = strategyTypeId;
     }
 
     // Getters and Setters
@@ -45,20 +40,20 @@ public class ProductSaleRule implements Serializable {
         return id;
     }
 
-    public Product getProduct() {
-        return product;
+    public String getProductCode() {
+        return productCode;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
     }
 
-    public CustomerType getCustomerType() {
-        return customerType;
+    public Long getCustomerTypeId() {
+        return customerTypeId;
     }
 
-    public void setCustomerType(CustomerType customerType) {
-        this.customerType = customerType;
+    public void setCustomerTypeId(Long customerTypeId) {
+        this.customerTypeId = customerTypeId;
     }
 
     public Double getPurchaseLimit() {
@@ -69,11 +64,11 @@ public class ProductSaleRule implements Serializable {
         this.purchaseLimit = purchaseLimit;
     }
 
-    public StrategyType getStrategyType() {
-        return strategyType;
+    public Long getStrategyTypeId() {
+        return strategyTypeId;
     }
 
-    public void setStrategyType(StrategyType strategyType) {
-        this.strategyType = strategyType;
+    public void setStrategyTypeId(Long strategyTypeId) {
+        this.strategyTypeId = strategyTypeId;
     }
 }

@@ -9,6 +9,7 @@ import com.pj.model.StrategyType;
 import com.pj.repository.CustomerTypeRepository;
 import com.pj.repository.ProductRepository;
 import com.pj.repository.ProductSaleRuleRepository;
+import com.pj.repository.StrategyTypeRepository; // 添加此行
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,9 @@ public class PurchaseValidationService {
 
     @Autowired
     private ProductSaleRuleRepository productSaleRuleRepository;
+
+    @Autowired
+    private StrategyTypeRepository strategyTypeRepository; // 添加此行
 
     public PurchaseResponseDTO validatePurchase(PurchaseRequestDTO request) {
         // 1. 验证产品是否存在，通过 productCode
@@ -56,14 +60,21 @@ public class PurchaseValidationService {
         CustomerType customerType = optionalCustomerType.get();
 
         // 4. 获取对应的发售规则，通过 productCode 和 customerTypeId
-        Optional<ProductSaleRule> optionalRule = productSaleRuleRepository.findByProduct_ProductCodeAndCustomerType(product.getProductCode(), customerType);
+        Optional<ProductSaleRule> optionalRule = productSaleRuleRepository.findByProductCodeAndCustomerTypeId(
+                product.getProductCode(), customerType.getId());
         if (!optionalRule.isPresent()) {
             return new PurchaseResponseDTO(false, "未配置发售规则");
         }
         ProductSaleRule rule = optionalRule.get();
-        StrategyType strategy = rule.getStrategyType();
 
-        // 5. 验证是否允许在购买日期购买
+        // 5. 根据 strategyTypeId 查询 StrategyType
+        Optional<StrategyType> optionalStrategy = strategyTypeRepository.findById(rule.getStrategyTypeId());
+        if (!optionalStrategy.isPresent()) {
+            return new PurchaseResponseDTO(false, "策略类型不存在");
+        }
+        StrategyType strategy = optionalStrategy.get();
+
+        // 6. 验证是否允许在购买日期购买
         if (!isAllowedToPurchase(purchaseDate, strategy)) {
             // 根据策略类型决定提示信息
             if (strategy.getRegularHolidays() != null && !strategy.getRegularHolidays().isEmpty()) {
@@ -73,12 +84,12 @@ public class PurchaseValidationService {
             }
         }
 
-        // 6. 验证购买金额是否在限额内
+        // 7. 验证购买金额是否在限额内
         if (request.getPurchaseAmount() > rule.getPurchaseLimit()) {
             return new PurchaseResponseDTO(false, "购买金额超限");
         }
 
-        // 7. 如果所有验证通过，允许购买
+        // 8. 如果所有验证通过，允许购买
         return new PurchaseResponseDTO(true, "可以购买");
     }
 
