@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -79,4 +80,31 @@ public class StrategyTypeController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseDTOs);
     }
+
+    // TODO: 2024/10/12 策略的修改
+
+    /**
+     * 修改 StrategyType 信息
+     *
+     * @param strategyTypeDTO 包含修改信息的 DTO 对象
+     * @return 修改后的 StrategyType 信息
+     */
+    @PostMapping("/update")
+    public ResponseEntity<String> updateStrategyType(@RequestBody StrategyTypeDTO strategyTypeDTO) {
+        Optional<StrategyType> strategyTypeOpt = strategyTypeRepository.findById(strategyTypeDTO.getId());
+        if (strategyTypeOpt.isPresent()) {
+            StrategyType strategyType = strategyTypeOpt.get();
+            strategyType.setStrategyCode(strategyTypeDTO.getStrategyCode());
+            strategyType.setRegularHolidays(strategyTypeDTO.getRegularHolidays());
+            strategyType.setSpecialHolidays(strategyTypeDTO.getSpecialHolidays());
+            strategyType.setSpecialWorkdays(strategyTypeDTO.getSpecialWorkdays());
+            strategyType.setStartTime(strategyTypeDTO.getStartTime());
+            strategyType.setEndTime(strategyTypeDTO.getEndTime());
+            strategyTypeRepository.save(strategyType);
+            return ResponseEntity.ok("StrategyType updated successfully.");
+        } else {
+            return ResponseEntity.status(404).body("StrategyType not found.");
+        }
+    }
+
 }

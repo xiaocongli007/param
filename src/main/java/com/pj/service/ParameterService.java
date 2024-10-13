@@ -52,8 +52,6 @@ public class ParameterService {
         LocalDateTime now = LocalDateTime.now();
 
         for (Parameter param : allParams) {
-            System.out.println("key是"+param.getKey()+"value是"+param.getValue());
-
             if (Boolean.TRUE.equals(param.getEnabled())) {
 /*                if ((param.getStartTime() == null || !now.isBefore(param.getStartTime())) &&
                         (param.getEndTime() == null || !now.isAfter(param.getEndTime()))) {
@@ -64,10 +62,8 @@ public class ParameterService {
         }
 
         // 使用ConcurrentHashMap的putAll方法保证线程安全
-        System.out.println(tempCache.get("siteName"));
         parameterCache.clear();
         parameterCache.putAll(tempCache);
-        System.out.println(parameterCache.get("siteName"));
         System.out.println("Parameters cache refreshed at " + now);
     }
 

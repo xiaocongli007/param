@@ -51,4 +51,17 @@ public class CustomerTypeController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseDTOs);
     }
+
+    @PostMapping("/getByid")
+    public ResponseEntity<CustomerTypeDTO> getCustomerTypeById(@RequestBody CustomerTypeDTO customerTypeDTO) {
+        Long id = customerTypeDTO.getId();
+        CustomerType customerType = customerTypeRepository.findById(id).orElse(null);
+        if (customerType != null) {
+            CustomerTypeDTO responseDTO = new CustomerTypeDTO(customerType.getId(), customerType.getTypeName());
+            return ResponseEntity.ok(responseDTO);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

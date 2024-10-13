@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ProductSaleRuleDTO {
 
+    private Long id;
 
     private String productCode;
 
@@ -16,7 +17,23 @@ public class ProductSaleRuleDTO {
 
     private Long strategyTypeId;
 
+    public ProductSaleRuleDTO(Long id, String productCode, Long customerTypeId, Double purchaseLimit, Long strategyTypeId) {
+        this.id=id;
+        this.productCode = productCode;
+        this.customerTypeId = customerTypeId;
+        this.purchaseLimit = purchaseLimit;
+        this.strategyTypeId = strategyTypeId;
+    }
+
     // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getProductCode() {
         return productCode;
